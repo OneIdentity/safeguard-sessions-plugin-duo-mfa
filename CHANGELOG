@@ -1,0 +1,9 @@
+2.0.1 2019-04-15
+
+Initial release on GitHub.
+
+2.0.0 2019-01-22
+
+Ask for new OTP if previously used one provided.
+Rewrite with Plugin SDK 1.1.2.
+

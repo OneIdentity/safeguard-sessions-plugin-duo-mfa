@@ -1,0 +1,8 @@
+[packages]
+duo-client = "*"
+
+[dev-packages]
+duo-client = "*"
+
+[requires]
+python_version = "3.6"

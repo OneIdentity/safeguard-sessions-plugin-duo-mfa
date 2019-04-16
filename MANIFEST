@@ -1,0 +1,6 @@
+api: 1.1
+type: aa
+name: SPS_Duo
+version: 2.0.1
+description: Duo Multi-Factor Authentication plugin
+entry_point: main.py
