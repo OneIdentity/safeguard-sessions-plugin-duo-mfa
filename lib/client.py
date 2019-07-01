@@ -19,7 +19,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-
+import base64
 import logging
 from ssl import SSLError
 from socket import error as SocketError
@@ -34,36 +34,53 @@ logger = logging.getLogger(__name__)
 
 class Client(MFAClient):
 
-    def __init__(self, ikey, skey, host, timeout=30, proxy=None, proxyport=3128,
-                 ignore_connection_error=False, log_level='', second_try=None, disable_echo=False):
+    def __init__(self, ikey, skey, host, timeout=30, ignore_connection_error=False, second_try=None, disable_echo=False,
+                 http_proxy_settings=None):
         self._duo = Auth(ikey=ikey, skey=skey, host=host, timeout=timeout)
         self._second_try = second_try
         self._disable_echo = disable_echo
-
-        if proxy:
-            self._duo.set_proxy(proxy, proxyport)
+        self._set_http_proxy_settings(http_proxy_settings)
         super().__init__('SPS Duo Plugin', ignore_connection_error)
         logger.info('Client initialized.')
 
+    def _set_http_proxy_settings(self, http_proxy_settings):
+        if not http_proxy_settings:
+            return
+        if http_proxy_settings.get('username') and http_proxy_settings.get('password'):
+            # rfc7617 The 'Basic' HTTP Authentication Scheme
+            encoded_user_pwd = base64.b64encode(
+                "{}:{}".format(http_proxy_settings.get('username'), http_proxy_settings.get('password')).encode("utf-8")
+            )
+            headers = {'Proxy-Authorization': "Basic " + encoded_user_pwd.decode("ascii")}
+        else:
+            headers = None
+        logger.info('Setting proxy in Duo client to server={} port={} {}'.format(
+            http_proxy_settings.get('server'),
+            http_proxy_settings.get('port'),
+            "with basic authentication" if headers else "without authentication"
+        ))
+        self._duo.set_proxy(
+            host=http_proxy_settings.get('server'),
+            port=int(http_proxy_settings.get('port')),
+            headers=headers
+        )
+
     @classmethod
-    def from_config(cls, plugin_configuration, section='duo', second_try=None):
+    def from_config(cls, plugin_configuration, section='duo', second_try=None, http_proxy_settings=None):
         ikey = plugin_configuration.get(section, 'ikey', required=True)
         skey = plugin_configuration.get(section, 'skey', required=True)
         host = plugin_configuration.get(section, 'host', required=True)
         timeout = plugin_configuration.getint(section, 'timeout', 60)
-        proxy = plugin_configuration.get('https_proxy', 'server')
-        proxyport = plugin_configuration.getint('https_proxy', 'port', 3128)
         ignore_connection_error = plugin_configuration.getboolean(section, 'ignore_connection_error')
         disable_echo = plugin_configuration.getboolean('auth', 'disable_echo', default=False)
         return cls(ikey,
                    skey,
                    host,
                    timeout=timeout,
-                   proxy=proxy,
-                   proxyport=proxyport,
                    ignore_connection_error=ignore_connection_error,
                    second_try=second_try,
-                   disable_echo=disable_echo)
+                   disable_echo=disable_echo,
+                   http_proxy_settings=http_proxy_settings)
 
     def otp_authenticate(self, username, otp):
         result = False

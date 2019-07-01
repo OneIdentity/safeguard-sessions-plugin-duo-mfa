@@ -22,6 +22,7 @@
 import pytest
 from ssl import SSLError
 from unittest.mock import patch
+from safeguard.sessions.plugin.box_configuration_settings import HttpProxySettings
 from safeguard.sessions.plugin.mfa_client import MFAAuthenticationFailure, MFACommunicationError, MFAServiceUnreachable
 from safeguard.sessions.plugin import AAResponse
 from ..client import Client
@@ -137,5 +138,14 @@ def test_push_auth_invalid_apikey(client, duo_user):
 
 
 def test_duo_set_proxy():
-    client = Client('ikey', 'skey', 'host', proxy='proxy')
-    assert (client._duo.proxy_host == 'proxy' and client._duo.proxy_port == 3128)
+    client = Client('ikey', 'skey', 'host', http_proxy_settings=dict(server='proxy', port='3128'))
+    assert client._duo.proxy_host == 'proxy'
+    assert client._duo.proxy_port == 3128
+
+
+def test_duo_set_proxy_auth():
+    client = Client(
+        'ikey', 'skey', 'host', http_proxy_settings=dict(server='proxy', port='3128', username='u', password='p')
+    )
+    # dTpw is Base64 encoded u:p
+    assert  client._duo.proxy_headers == {'Proxy-Authorization': 'Basic dTpw'}
