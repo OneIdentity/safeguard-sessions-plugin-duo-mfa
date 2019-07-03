@@ -40,4 +40,8 @@ class Plugin(AAPlugin):
         return auth_result
 
     def _construct_mfa_client(self):
-        return Client.from_config(self.plugin_configuration, second_try=self.second_try)
+        return Client.from_config(
+            self.plugin_configuration,
+            second_try=self.second_try,
+            http_proxy_settings=self.proxy_settings,
+        )
