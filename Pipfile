@@ -3,6 +3,7 @@ duo-client = "*"
 
 [dev-packages]
 duo-client = "*"
+oneidentity-safeguard-sessions-plugin-sdk = "~=1.2.0"
 
 [requires]
 python_version = "3.6"
