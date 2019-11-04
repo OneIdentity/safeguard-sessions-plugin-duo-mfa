@@ -44,7 +44,9 @@ class Client(MFAClient):
         logger.info('Client initialized.')
 
     def _set_http_proxy_settings(self, http_proxy_settings):
-        if not http_proxy_settings:
+        if (not http_proxy_settings
+                or not http_proxy_settings.get('server')
+                or not http_proxy_settings.get('port')):
             return
         if http_proxy_settings.get('username') and http_proxy_settings.get('password'):
             # rfc7617 The 'Basic' HTTP Authentication Scheme
