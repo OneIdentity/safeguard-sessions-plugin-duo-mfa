@@ -143,6 +143,18 @@ def test_duo_set_proxy():
     assert client._duo.proxy_port == 3128
 
 
+def test_duo_proxy_is_not_set_when_settings_omitted():
+    client = Client('ikey', 'skey', 'host', http_proxy_settings=None)
+    assert client._duo.proxy_host is None
+    assert client._duo.proxy_port is None
+
+
+def test_duo_proxy_is_not_set_when_proxy_settings_not_set():
+    client = Client('ikey', 'skey', 'host', http_proxy_settings=dict(username='u', password='p'))
+    assert client._duo.proxy_host is None
+    assert client._duo.proxy_port is None
+
+
 def test_duo_set_proxy_auth():
     client = Client(
         'ikey', 'skey', 'host', http_proxy_settings=dict(server='proxy', port='3128', username='u', password='p')

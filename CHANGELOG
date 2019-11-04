@@ -1,3 +1,7 @@
+2.0.3 2019-11-04
+
+Bugfix, check http proxy settings before getting them.
+
 2.0.2 2019-07-01
 
 Use common HTTPS proxy settings. Add proxy basic authentication capability.
