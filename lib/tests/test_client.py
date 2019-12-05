@@ -44,10 +44,13 @@ def test_otp_auth_ok(client, duo_user, interactive):
 def test_otp_ask_for_new_otp_if_already_used(client, duo_user, interactive):
     otp = interactive.askforinput("Please enter the previous OTP")
     result = client.otp_authenticate(duo_user, otp)
-    assert result == AAResponse.need_info(**{
-        'key': 'otp',
-        'question': 'This passcode has already been used. Please generate a new passcode and try again. ',
-        'disable_echo': False})
+    assert result == AAResponse.need_info(
+        **{
+            "key": "otp",
+            "question": "This passcode has already been used. Please generate a new passcode and try again. ",
+            "disable_echo": False,
+        }
+    )
 
 
 @pytest.mark.interactive
@@ -62,20 +65,20 @@ def test_push_auth_user_decline(client, duo_user, interactive):
     with pytest.raises(MFAAuthenticationFailure) as e:
         client.push_authenticate(duo_user)
 
-    assert e.match('Login request denied')
+    assert e.match("Login request denied")
 
 
-@patch('lib.client.Auth')
+@patch("lib.client.Auth")
 def test_push_auth_timeout(patcher, duo_user, interactive):
     with pytest.raises(MFAAuthenticationFailure) as e:
         instance = patcher.return_value
-        instance.preauth.return_value = {'result': 'auth', 'devices': [{'capabilities': ['push']}]}
-        instance.auth.side_effect = SSLError('The read operation timed out.')
+        instance.preauth.return_value = {"result": "auth", "devices": [{"capabilities": ["push"]}]}
+        instance.auth.side_effect = SSLError("The read operation timed out.")
 
-        client = Client('ikey', 'skey', 'host')
+        client = Client("ikey", "skey", "host")
         client.push_authenticate(duo_user)
 
-    assert e.match('timed out')
+    assert e.match("timed out")
 
 
 def test_bypass_auth_ok(client, duo_user, duo_passcode):
@@ -86,7 +89,7 @@ def test_otp_auth_wrong_passcode(client, duo_user, duo_wrong_passcode):
     with pytest.raises(MFAAuthenticationFailure) as e:
         client.otp_authenticate(duo_user, duo_wrong_passcode)
 
-    assert e.match('Incorrect passcode')
+    assert e.match("Incorrect passcode")
 
 
 def test_otp_auth_unknown_host(client, duo_user, duo_passcode, inject_connection_error):
@@ -98,29 +101,29 @@ def test_otp_auth_unknown_user(client, duo_wrong_user, duo_passcode):
     with pytest.raises(MFAAuthenticationFailure) as e:
         client.otp_authenticate(duo_wrong_user, duo_passcode)
 
-    assert e.match('Enroll an authentication')
+    assert e.match("Enroll an authentication")
 
 
 def test_otp_auth_invalid_apikey(client, duo_user, duo_passcode):
     with pytest.raises(MFACommunicationError) as e:
-        client._duo.skey = ''
+        client._duo.skey = ""
         client.otp_authenticate(duo_user, duo_passcode)
 
-    assert e.match('Invalid signature')
+    assert e.match("Invalid signature")
 
 
 def test_push_auth_no_push_device(client, duo_user_without_device):
     with pytest.raises(MFAAuthenticationFailure) as e:
         client.push_authenticate(duo_user_without_device)
 
-    assert e.match('No push capable')
+    assert e.match("No push capable")
 
 
 def test_push_auth_unkown_user(client, duo_wrong_user):
     with pytest.raises(MFAAuthenticationFailure) as e:
         client.push_authenticate(duo_wrong_user)
 
-    assert e.match('Enroll an authentication')
+    assert e.match("Enroll an authentication")
 
 
 def test_push_auth_unknown_host(client, duo_user, inject_connection_error):
@@ -130,33 +133,33 @@ def test_push_auth_unknown_host(client, duo_user, inject_connection_error):
 
 def test_push_auth_invalid_apikey(client, duo_user):
     with pytest.raises(MFACommunicationError) as e:
-        client._duo.skey = ''
+        client._duo.skey = ""
         client.push_authenticate(duo_user)
 
-    assert e.match('Invalid signature')
+    assert e.match("Invalid signature")
 
 
 def test_duo_set_proxy():
-    client = Client('ikey', 'skey', 'host', http_proxy_settings=dict(server='proxy', port='3128'))
-    assert client._duo.proxy_host == 'proxy'
+    client = Client("ikey", "skey", "host", http_proxy_settings=dict(server="proxy", port="3128"))
+    assert client._duo.proxy_host == "proxy"
     assert client._duo.proxy_port == 3128
 
 
 def test_duo_proxy_is_not_set_when_settings_omitted():
-    client = Client('ikey', 'skey', 'host', http_proxy_settings=None)
+    client = Client("ikey", "skey", "host", http_proxy_settings=None)
     assert client._duo.proxy_host is None
     assert client._duo.proxy_port is None
 
 
 def test_duo_proxy_is_not_set_when_proxy_settings_not_set():
-    client = Client('ikey', 'skey', 'host', http_proxy_settings=dict(username='u', password='p'))
+    client = Client("ikey", "skey", "host", http_proxy_settings=dict(username="u", password="p"))
     assert client._duo.proxy_host is None
     assert client._duo.proxy_port is None
 
 
 def test_duo_set_proxy_auth():
     client = Client(
-        'ikey', 'skey', 'host', http_proxy_settings=dict(server='proxy', port='3128', username='u', password='p')
+        "ikey", "skey", "host", http_proxy_settings=dict(server="proxy", port="3128", username="u", password="p")
     )
     # dTpw is Base64 encoded u:p
-    assert client._duo.proxy_headers == {'Proxy-Authorization': 'Basic dTpw'}
+    assert client._duo.proxy_headers == {"Proxy-Authorization": "Basic dTpw"}
