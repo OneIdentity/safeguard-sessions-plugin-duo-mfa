@@ -35,13 +35,11 @@ class Plugin(AAPlugin):
     def do_authenticate(self):
         client = self._construct_mfa_client()
         auth_result = client.execute_authenticate(self.username, self.mfa_identity, self.mfa_password)
-        if auth_result['verdict'] == 'NEEDINFO':
+        if auth_result["verdict"] == "NEEDINFO":
             self.second_try = True
         return auth_result
 
     def _construct_mfa_client(self):
         return Client.from_config(
-            self.plugin_configuration,
-            second_try=self.second_try,
-            http_proxy_settings=self.proxy_settings,
+            self.plugin_configuration, second_try=self.second_try, http_proxy_settings=self.proxy_settings,
         )

@@ -30,42 +30,40 @@ class DuoVCRHTTPSConnection(VCRHTTPSConnection, CertValidatingHTTPSConnection):
     _baseclass = CertValidatingHTTPSConnection
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def vcr_config():
-    return {'filter_headers': ['authorization'],
-            'filter_post_data_parameters': ['passcode'],
-            'custom_patches': ((duo_client.client, 'CertValidatingHTTPSConnection', DuoVCRHTTPSConnection),)}
+    return {
+        "filter_headers": ["authorization"],
+        "filter_post_data_parameters": ["passcode"],
+        "custom_patches": ((duo_client.client, "CertValidatingHTTPSConnection", DuoVCRHTTPSConnection),),
+    }
 
 
 @pytest.fixture
 def duo_user(site_parameters):
-    return site_parameters['username']
+    return site_parameters["username"]
 
 
 @pytest.fixture
 def duo_wrong_user(site_parameters):
-    return site_parameters['wrong_username']
+    return site_parameters["wrong_username"]
 
 
 @pytest.fixture
 def duo_user_without_device(site_parameters):
-    return site_parameters['username_without_device']
+    return site_parameters["username_without_device"]
 
 
 @pytest.fixture
 def duo_passcode(site_parameters):
-    return site_parameters['passcode']
+    return site_parameters["passcode"]
 
 
 @pytest.fixture
 def duo_wrong_passcode(site_parameters):
-    return site_parameters['wrong_passcode']
+    return site_parameters["wrong_passcode"]
 
 
 @pytest.fixture
 def client(site_parameters):
-    return Client(
-        site_parameters['ikey'],
-        site_parameters['skey'],
-        site_parameters['host']
-    )
+    return Client(site_parameters["ikey"], site_parameters["skey"], site_parameters["host"])
