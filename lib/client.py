@@ -99,7 +99,10 @@ class Client(MFAClient):
     def otp_authenticate(self, username, otp):
         result = False
         try:
-            self._check_preauth(username)
+            preauth = self._check_preauth(username)
+            if self._is_bypass_user(preauth):
+                return self._log_bypass_and_create_aa_response()
+
             logger.info("Account found, running passcode authentication.")
             auth = self._duo.auth(factor="passcode", username=username, passcode=str(otp))
             result = self._check_auth_result(auth)
@@ -112,6 +115,9 @@ class Client(MFAClient):
     def push_authenticate(self, username):
         try:
             preauth = self._check_preauth(username)
+            if self._is_bypass_user(preauth):
+                return self._log_bypass_and_create_aa_response()
+
             devices = preauth["devices"]
             if not [dev for dev in devices if "push" in dev.get("capabilities", [])]:
                 raise MFAAuthenticationFailure("No push capable device enrolled.")
@@ -126,10 +132,19 @@ class Client(MFAClient):
             raise MFAServiceUnreachable(self._construct_exception_message(e))
         return True
 
+    def _log_bypass_and_create_aa_response(self):
+        msg = "User configured as bypass user on Duo."
+        logger.info(msg)
+        return AAResponse.accept(reason=msg)
+
+    def _is_bypass_user(self, preauth):
+        result = preauth["result"]
+        return result == "allow"
+
     def _check_preauth(self, username):
         logger.debug("Looking up user.")
         preauth = self._duo.preauth(username=username)
-        if preauth["result"] != "auth":
+        if preauth["result"] not in ("auth", "allow"):
             raise MFAAuthenticationFailure(preauth["status_msg"])
         return preauth
 

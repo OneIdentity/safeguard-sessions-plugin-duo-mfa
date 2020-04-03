@@ -45,6 +45,11 @@ def duo_user(site_parameters):
 
 
 @pytest.fixture
+def duo_bypass_user(site_parameters):
+    return site_parameters["bypass_username"]
+
+
+@pytest.fixture
 def duo_wrong_user(site_parameters):
     return site_parameters["wrong_username"]
 
