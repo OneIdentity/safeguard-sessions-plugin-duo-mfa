@@ -10,7 +10,7 @@ pool:
   name: Safeguard Privilaged Sessions Integration Pool
 
 steps:
-- script: echo Hello, world!
+- script: plugintool
   displayName: 'Run a one-line script'
 
 - script: |
