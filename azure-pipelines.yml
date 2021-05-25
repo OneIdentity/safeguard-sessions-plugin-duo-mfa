@@ -10,10 +10,9 @@ pool:
   name: Safeguard Privilaged Sessions Integration Pool
 
 steps:
-- script: plugintool run-tests
-  displayName: 'Run a one-line script'
+- script: pipenv install -d
+  displayName: 'Create environment'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- script: plugintool run-tests
+  displayName: 'Run plugin tests'
+
