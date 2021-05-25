@@ -10,9 +10,6 @@ pool:
   name: Safeguard Privilaged Sessions Integration Pool
 
 steps:
-- script: pipenv install -d
-  displayName: 'Create environment'
-
 - script: plugintool run-tests
   displayName: 'Run plugin tests'
 
