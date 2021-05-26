@@ -10,6 +10,14 @@ pool:
   name: Safeguard Privilaged Sessions Integration Pool
 
 steps:
-- script: pipenv run pluginv run-tests
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Write your commands here
+      plugintool link-test-data
+      pipenv install -d
+      pipenv run pluginv run-tests
   displayName: 'Run plugin tests'
 
