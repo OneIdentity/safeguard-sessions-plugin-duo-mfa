@@ -17,7 +17,6 @@ steps:
     script: |
       # Write your commands here
       plugintool link-test-data
-      pipenv install -d
       pipenv run pluginv run-tests
   displayName: 'Run plugin tests'
 
