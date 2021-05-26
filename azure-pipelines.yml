@@ -10,6 +10,6 @@ pool:
   name: Safeguard Privilaged Sessions Integration Pool
 
 steps:
-- script: plugintool run-tests
+- script: pipenv run pluginv run-tests
   displayName: 'Run plugin tests'
 
