@@ -68,8 +68,13 @@ class Client(MFAClient):
     def otp_authenticate(self, username, otp):
         result = False
         try:
-            self._check_preauth(username)
+            preauth = self._check_preauth(username)
             logger.info('Account found, running passcode authentication.')
+            if str(otp).lower() == 'sms':
+                self._check_device_capabilities(preauth, 'sms')
+                logger.info('Sending passcode via text message')
+                self._duo.auth(factor='sms', username=username, device='auto')
+                return AAResponse.need_info("Enter passcode from text message: ", 'otp')
             auth = self._duo.auth(factor='passcode', username=username, passcode=str(otp))
             result = self._check_auth_result(auth)
         except (RuntimeError, KeyError) as e:
@@ -81,9 +86,7 @@ class Client(MFAClient):
     def push_authenticate(self, username):
         try:
             preauth = self._check_preauth(username)
-            devices = preauth['devices']
-            if not [dev for dev in devices if 'push' in dev.get('capabilities', [])]:
-                raise MFAAuthenticationFailure('No push capable device enrolled.')
+            self._check_device_capabilities(preauth, 'push')
             logger.info('Account and device found, running push authentication.')
             auth = self._duo.auth(factor='push', username=username, device='auto')  # First push device is used.
             self._check_auth_result(auth)
@@ -94,6 +97,13 @@ class Client(MFAClient):
                 raise MFAAuthenticationFailure('Push request timed out.')
             raise MFAServiceUnreachable(self._construct_exception_message(e))
         return True
+
+    @staticmethod
+    def _check_device_capabilities(preauth, capability):
+        devices = preauth['devices']
+        if not [dev for dev in devices if capability in dev.get('capabilities', [])]:
+            raise MFAAuthenticationFailure('No {} capable device enrolled.'.format(capability))
+
 
     def _check_preauth(self, username):
         logger.debug('Looking up user.')
