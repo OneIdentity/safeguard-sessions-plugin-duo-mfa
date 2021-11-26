@@ -102,9 +102,13 @@ class Client(MFAClient):
             preauth = self._check_preauth(username)
             if self._is_bypass_user(preauth):
                 return self._log_bypass_and_create_aa_response()
-
-            logger.info("Account found, running passcode authentication.")
-            auth = self._duo.auth(factor="passcode", username=username, passcode=str(otp))
+            logger.info('Account found, running passcode authentication.')
+            if str(otp).lower() == 'sms':
+                self._check_device_capabilities(preauth, 'sms')
+                logger.info('Sending passcode via text message')
+                self._duo.auth(factor='sms', username=username, device='auto')  # First push device is used.
+                return AAResponse.need_info("Enter passcode from text message: ", 'otp')
+            auth = self._duo.auth(factor='passcode', username=username, passcode=str(otp))
             result = self._check_auth_result(auth)
         except (RuntimeError, KeyError) as e:
             raise MFACommunicationError(self._construct_exception_message(e))
@@ -117,12 +121,9 @@ class Client(MFAClient):
             preauth = self._check_preauth(username)
             if self._is_bypass_user(preauth):
                 return self._log_bypass_and_create_aa_response()
-
-            devices = preauth["devices"]
-            if not [dev for dev in devices if "push" in dev.get("capabilities", [])]:
-                raise MFAAuthenticationFailure("No push capable device enrolled.")
-            logger.info("Account and device found, running push authentication.")
-            auth = self._duo.auth(factor="push", username=username, device="auto")  # First push device is used.
+            self._check_device_capabilities(preauth, 'push')
+            logger.info('Account and device found, running push authentication.')
+            auth = self._duo.auth(factor='push', username=username, device='auto')  # First push device is used.
             self._check_auth_result(auth)
         except (RuntimeError, KeyError) as e:
             raise MFACommunicationError(self._construct_exception_message(e))
@@ -131,6 +132,12 @@ class Client(MFAClient):
                 raise MFAAuthenticationFailure("Push request timed out.")
             raise MFAServiceUnreachable(self._construct_exception_message(e))
         return True
+
+    @staticmethod
+    def _check_device_capabilities(preauth, capability):
+        devices = preauth['devices']
+        if not [dev for dev in devices if capability in dev.get('capabilities', [])]:
+            raise MFAAuthenticationFailure('No {} capable device enrolled.'.format(capability))
 
     def _log_bypass_and_create_aa_response(self):
         msg = "User configured as bypass user on Duo."
