@@ -1,3 +1,9 @@
+2.0.1 2021-10-15
+
+If `sms` given as OTP the user will receive passcode via text message
+
+Bypass user now can login without push/otp authentication
+
 2.0.1 2019-04-15
 
 Initial release on GitHub.
