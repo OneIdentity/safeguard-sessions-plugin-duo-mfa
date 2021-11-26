@@ -69,11 +69,13 @@ class Client(MFAClient):
         result = False
         try:
             preauth = self._check_preauth(username)
+            if self._is_bypass_user(preauth):
+                return self._log_bypass_and_create_aa_response()
             logger.info('Account found, running passcode authentication.')
             if str(otp).lower() == 'sms':
                 self._check_device_capabilities(preauth, 'sms')
                 logger.info('Sending passcode via text message')
-                self._duo.auth(factor='sms', username=username, device='auto')
+                self._duo.auth(factor='sms', username=username, device='auto')  # First push device is used.
                 return AAResponse.need_info("Enter passcode from text message: ", 'otp')
             auth = self._duo.auth(factor='passcode', username=username, passcode=str(otp))
             result = self._check_auth_result(auth)
@@ -86,6 +88,8 @@ class Client(MFAClient):
     def push_authenticate(self, username):
         try:
             preauth = self._check_preauth(username)
+            if self._is_bypass_user(preauth):
+                return self._log_bypass_and_create_aa_response()
             self._check_device_capabilities(preauth, 'push')
             logger.info('Account and device found, running push authentication.')
             auth = self._duo.auth(factor='push', username=username, device='auto')  # First push device is used.
@@ -111,6 +115,15 @@ class Client(MFAClient):
         if preauth['result'] != 'auth':
             raise MFAAuthenticationFailure(preauth['status_msg'])
         return preauth
+
+    def _log_bypass_and_create_aa_response(self):
+        msg = "User configured as bypass user on Duo."
+        logger.info(msg)
+        return AAResponse.accept(reason=msg)
+
+    def _is_bypass_user(self, preauth):
+        result = preauth["result"]
+        return result == "allow"
 
     def _check_auth_result(self, auth_result):
         msg = 'This passcode has already been used. Please generate a new passcode and try again.'
