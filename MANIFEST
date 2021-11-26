@@ -1,7 +1,7 @@
 api: 1.2
 type: aa
 name: SPS_Duo
-version: 2.0.4
+version: 2.1.0
 description: Duo Multi-Factor Authentication plugin
 entry_point: main.py
 author_name: One Identity PAM Integration Team
