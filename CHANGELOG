@@ -1,3 +1,8 @@
+2.1.0 2021-11-26
+
+Allow users to request OTP via text message
+Use new minor version as Plugin-SDK version changes
+
 2.0.4 2020-04-03
 
 Bugfix, allow connection of bypassed users
