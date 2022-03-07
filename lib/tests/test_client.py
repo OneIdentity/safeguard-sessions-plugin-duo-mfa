@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2019 One Identity
+#   Copyright 2022 One Identity LLC.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -63,6 +63,19 @@ def test_push_auth_user_decline(client, duo_user, interactive):
         client.push_authenticate(duo_user)
 
     assert e.match('Login request denied')
+
+
+@pytest.mark.interactive
+def test_bypass_auth_without_bypass_code_push(client, duo_bypass_user, interactive):
+    result = client.push_authenticate(duo_bypass_user)
+    assert result == AAResponse.accept(reason="User configured as bypass user on Duo.")
+
+
+@pytest.mark.interactive
+def test_bypass_auth_without_bypass_code_otp(client, duo_bypass_user, interactive):
+    otp = interactive.askforinput("Please enter OTP whatever you like")
+    result = client.otp_authenticate(duo_bypass_user, otp)
+    assert result == AAResponse.accept(reason="User configured as bypass user on Duo.")
 
 
 @patch('lib.client.Auth')

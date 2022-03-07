@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2019 One Identity
+#   Copyright 2022 One Identity LLC.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -68,8 +68,15 @@ class Client(MFAClient):
     def otp_authenticate(self, username, otp):
         result = False
         try:
-            self._check_preauth(username)
+            preauth = self._check_preauth(username)
+            if self._is_bypass_user(preauth):
+                return self._log_bypass_and_create_aa_response()
             logger.info('Account found, running passcode authentication.')
+            if str(otp).lower() == 'sms':
+                self._check_device_capabilities(preauth, 'sms')
+                logger.info('Sending passcode via text message')
+                self._duo.auth(factor='sms', username=username, device='auto')  # First push device is used.
+                return AAResponse.need_info("Enter passcode from text message: ", 'otp')
             auth = self._duo.auth(factor='passcode', username=username, passcode=str(otp))
             result = self._check_auth_result(auth)
         except (RuntimeError, KeyError) as e:
@@ -81,9 +88,9 @@ class Client(MFAClient):
     def push_authenticate(self, username):
         try:
             preauth = self._check_preauth(username)
-            devices = preauth['devices']
-            if not [dev for dev in devices if 'push' in dev.get('capabilities', [])]:
-                raise MFAAuthenticationFailure('No push capable device enrolled.')
+            if self._is_bypass_user(preauth):
+                return self._log_bypass_and_create_aa_response()
+            self._check_device_capabilities(preauth, 'push')
             logger.info('Account and device found, running push authentication.')
             auth = self._duo.auth(factor='push', username=username, device='auto')  # First push device is used.
             self._check_auth_result(auth)
@@ -95,10 +102,16 @@ class Client(MFAClient):
             raise MFAServiceUnreachable(self._construct_exception_message(e))
         return True
 
+    @staticmethod
+    def _check_device_capabilities(preauth, capability):
+        devices = preauth['devices']
+        if not [dev for dev in devices if capability in dev.get('capabilities', [])]:
+            raise MFAAuthenticationFailure('No {} capable device enrolled.'.format(capability))
+
     def _check_preauth(self, username):
         logger.debug('Looking up user.')
         preauth = self._duo.preauth(username=username)
-        if preauth['result'] != 'auth':
+        if preauth["result"] not in ("auth", "allow"):
             raise MFAAuthenticationFailure(preauth['status_msg'])
         return preauth
 
@@ -111,6 +124,15 @@ class Client(MFAClient):
         if auth_result['result'] != 'allow':
             raise MFAAuthenticationFailure(auth_result['status_msg'])
         return True
+
+    def _log_bypass_and_create_aa_response(self):
+        msg = "User configured as bypass user on Duo."
+        logger.info(msg)
+        return AAResponse.accept(reason=msg)
+
+    def _is_bypass_user(self, preauth):
+        result = preauth["result"]
+        return result == "allow"
 
     @staticmethod
     def _construct_exception_message(exception):

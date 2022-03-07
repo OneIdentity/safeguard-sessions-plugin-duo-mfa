@@ -1,3 +1,9 @@
+2.0.1-a 2022.03.07
+
+Configured bypass users now can login
+
+If sms supplied as otp user will receive one time password on phone in text message
+
 2.0.1 2019-04-15
 
 Initial release on GitHub.

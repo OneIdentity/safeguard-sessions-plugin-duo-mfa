@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2019 One Identity
+#   Copyright 2022 One Identity LLC.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
