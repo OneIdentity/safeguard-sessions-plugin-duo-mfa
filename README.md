@@ -20,6 +20,7 @@ Technical support is available to One Identity customers with a valid maintenanc
 
 The Support Portal provides self-help tools you can use to solve problems quickly and independently, 24 hours a day, 365 days a year. The Support Portal enables you to:
 
+- Learn [what Multi-factor authentication is and how it works](https://www.onelogin.com/learn/what-is-mfa)
 - Submit and manage a Service Request
 - View Knowledge Base articles
 - Sign up for product notifications
