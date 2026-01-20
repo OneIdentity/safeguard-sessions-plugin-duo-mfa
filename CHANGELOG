@@ -1,3 +1,11 @@
+2.2.0 2026-01-20
+
+Updated duo-client dependency due to Duo certificate authority bundle expiration.
+Updated API version to 1.8 in MANIFEST.
+Bumped plugin version to 2.2.0 in MANIFEST.
+Updated required Python version to 3.12 in Pipfile.
+Added six as a development dependency in Pipfile.
+
 2.1.0 2021-11-26
 
 Allow users to request OTP via text message
